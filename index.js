@@ -291,6 +291,21 @@ async function run() {
       res.send({ isAdmin });
     });
 
+    // get admin stats
+    app.get("/admin-stats", async (req, res) => {
+      const users = await usersCollection.estimatedDocumentCount();
+      const Malequery = { biodataType: "Male" };
+      const Femalequery = { biodataType: "Female" };
+      const maleBiodataCount = await biodataCollection.countDocuments(
+        Malequery
+      );
+      const femaleBiodataCount = await biodataCollection.countDocuments(
+        Femalequery
+      );
+
+      res.send({ users, maleBiodataCount, femaleBiodataCount });
+    });
+
 
 
   } finally {
