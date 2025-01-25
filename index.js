@@ -27,8 +27,42 @@ async function run() {
     // ------------------db collection---------------------------
     const database = client.db("PairUp");
     const usersCollection = database.collection("users");
+    const biodataCollection = database.collection("biodata");
+    const favoriteBiodataCollection = database.collection("favorites");
+    const contactRequestCollection = database.collection("contactRequest");
+
+
+
+
+
+    // ----------------------------------- payment stripe relatedd apis -------------------------------------
+    app.post("/create-payment-intent", async (req, res) => {
+      const { price } = req.body;
+      const ammount = parseInt(price * 100);
+      const paymentIntent = await stripe.paymentIntents.create({
+        amount: ammount,
+        currency: "usd",
+        payment_method_types: ["card"],
+      });
+
+
+      res.send({
+        clientSecret: paymentIntent.client_secret,
+      });
+    });
+
+// ----------------------------------- payment stripe relatedd apis end -------------------------------------
+
+
+
+
+
+
+
 
     // -------------------------------jwt token section start----------------------------------------------
+
+    // payment inntentl
     // create jwt token
     app.post("/jwt", async (req, res) => {
       const user = req.body;
@@ -61,6 +95,12 @@ async function run() {
 
 
 
+
+
+
+
+
+
     // ------------------------------user section start------------------------------------------------------
 
     // save user in database
@@ -71,10 +111,173 @@ async function run() {
       if (match) {
         return res.send({ message: "user exist" });
       }
+      user.role = "user";
+      user.status = "normal";
       const result = await usersCollection.insertOne(user);
       res.send(result);
-      console.log(user);
     });
+
+    // save biodata in db
+    app.post("/biodata", async (req, res) => {
+      const data = req.body;
+      const email = data.email;
+      const query = { email: email };
+      const exist = await biodataCollection.findOne(query);
+      if (exist) {
+        const updateDoc = {
+          $set: {
+            ...data,
+          },
+        };
+        const result = await biodataCollection.updateOne(query, updateDoc);
+        return res.send(result);
+      }
+      const BiodataId = (await biodataCollection.estimatedDocumentCount()) + 1;
+      const doc = {
+        BiodataId,
+        ...data,
+        status: "normal",
+      };
+      const result = await biodataCollection.insertOne(doc);
+      res.send(result);
+    });
+
+    // get all biodatas
+    app.get("/biodatas", async (req, res) => {
+      const gender = req.query.gender;
+      const location = req.query.location;
+      const fromAge = req.query.fromAge;
+      const toAge = req.query.toAge;
+      const query = {};
+      if (gender) {
+        query.biodataType = gender;
+      }
+      if (location) {
+        query.permanentDivision = location;
+      }
+      if (fromAge && toAge) {
+        query.age = {
+          $gte: parseInt(fromAge, 10),
+          $lte: parseInt(toAge, 10),
+        };
+      }
+      // console.log(query)
+      const result = await biodataCollection.find(query).toArray();
+      res.send(result);
+    });
+
+    // get single biodata
+    app.get("/biodataDetails/:id", async (req, res) => {
+      const id = req.params.id;
+      const query = { _id: new ObjectId(id) };
+      const result = await biodataCollection.findOne(query);
+      res.send(result);
+    });
+
+    // get single biodata by email user
+    app.get("/selfBiodata/:email", async (req, res) => {
+      const email = req.params.email;
+      const query = { email: email };
+      const result = await biodataCollection.findOne(query);
+      res.send(result);
+    });
+
+    // apply for biodata for premium
+    app.patch("/applyBiodataPremium/:email", verifyToken, async (req, res) => {
+      const email = req.params.email;
+      const query = { email: email };
+      // const biodata = await biodataCollection.findOne(query);
+      // const user = await usersCollection.findOne(query);
+      // if (biodata?.status === "pending") {
+      //   return res.send({ message: "you allready applied" });
+      // }
+      // if (user?.status === "pending") {
+      //   return res.send({ message: "you allready applied" });
+      // }
+      const updateDoc = {
+        $set: {
+          status: "pending",
+        },
+      };
+      const updateUser = await usersCollection.updateOne(query, updateDoc);
+      const result = await biodataCollection.updateOne(query, updateDoc);
+      res.send(result);
+    });
+
+    // add favorite biodata
+    app.post("/saveFavoriteBiodata", verifyToken, async (req, res) => {
+      const data = req.body;
+      const { ownerEmail, BiodataId } = data;
+      const query = { ownerEmail, BiodataId };
+      const match = await favoriteBiodataCollection.findOne(query);
+      if (match) {
+        return res.send({ message: "you already add this" });
+      }
+      const result = await favoriteBiodataCollection.insertOne(data);
+
+      res.send(result);
+    });
+
+    // get favorites list
+    app.get("/favoritesList/:email", verifyToken, async (req, res) => {
+      const email = req.params.email;
+      const query = { ownerEmail: email };
+      const result = await favoriteBiodataCollection.find(query).toArray();
+      res.send(result);
+    });
+
+    // delete favorites list
+    app.delete("/favoritesList/:email", verifyToken, async (req, res) => {
+      const email = req.params.email;
+      const query = { ownerEmail: email };
+      const result = await favoriteBiodataCollection.deleteOne(query);
+      res.send(result);
+    });
+
+    // cheack if the user is premium
+    app.get("/selfUser/:email", verifyToken, async (req, res) => {
+      const email = req.params.email;
+      const query = { email };
+      const result = await usersCollection.findOne(query);
+      res.send(result);
+    });
+
+
+    // post contact request
+    app.post('/contact-request',async(req,res)=>{
+      const payment = req.body;
+      const {email,biodataId} = payment;
+      const query = {email,biodataId};
+      const match = await contactRequestCollection.findOne(query);
+      if(match){
+        console.log('you already add this');
+        return res.send({ message: "you already add this" });
+      }
+      const result = contactRequestCollection.insertOne(payment);
+      console.log('payment info',payment);
+      res.send(result);
+    });
+
+    // get contact request user 
+    app.get('/contactRequest/:email',async(req,res)=>{
+      const email = req.params.email;
+      const query = {email:email}
+      const result = await contactRequestCollection.find(query).toArray();
+      res.send(result);
+    });
+
+
+
+
+
+
+
+
+
+
+
+
+    // --------------------------------------- admin section -----------------------------------------
 
 
 
