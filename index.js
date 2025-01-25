@@ -327,6 +327,32 @@ async function run() {
       res.send(user);
     });
 
+    // make user premium
+    app.patch("/makePremium/:email", verifyToken, async (req, res) => {
+      const email = req.params.email;
+      const query = { email: email };
+      const updateDoc = {
+        $set: {
+          status: "premium",
+        },
+      };
+      const user = await usersCollection.updateOne(query, updateDoc);
+      res.send(user);
+    });
+
+    // make Biodata premium
+    app.patch("/makeBiodataPremium/:email", verifyToken, async (req, res) => {
+      const email = req.params.email;
+      const query = { email: email };
+      const updateDoc = {
+        $set: {
+          status: "premium",
+        },
+      };
+      const user = await biodataCollection.updateOne(query, updateDoc);
+      res.send(user);
+    });
+
 
 
   } finally {
