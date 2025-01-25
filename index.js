@@ -306,6 +306,14 @@ async function run() {
       res.send({ users, maleBiodataCount, femaleBiodataCount });
     });
 
+    // get all users
+    app.get("/allUsers/:email", verifyToken, async (req, res) => {
+      const email = req.params.email;
+      const query = { email: { $ne: email } };
+      const result = await usersCollection.find(query).toArray();
+      res.send(result);
+    });
+
 
 
   } finally {
