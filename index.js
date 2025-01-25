@@ -367,7 +367,18 @@ async function run() {
       res.send(result);
     });
 
-
+    // approve contact request 
+    app.patch('/approveContactRequestAdmin/:id',async(req,res)=>{
+      const id = req.params.id;
+      const query = {_id: new ObjectId(id)};
+      const updateDoc = {
+        $set: {
+          status: "approved",
+        },
+      };
+      const result = await contactRequestCollection.updateOne(query,updateDoc);
+      res.send(result);
+    });
 
   } finally {
   }
