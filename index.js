@@ -314,6 +314,19 @@ async function run() {
       res.send(result);
     });
 
+    // make admin
+    app.patch("/makeAdmin/:email", verifyToken, async (req, res) => {
+      const email = req.params.email;
+      const query = { email: email };
+      const updateDoc = {
+        $set: {
+          role: "admin",
+        },
+      };
+      const user = await usersCollection.updateOne(query, updateDoc);
+      res.send(user);
+    });
+
 
 
   } finally {
