@@ -279,6 +279,18 @@ async function run() {
 
     // --------------------------------------- admin section -----------------------------------------
 
+    // cheack isAdmin
+    app.get("/user/admin/:email", async (req, res) => {
+      const email = req.params.email;
+      const query = { email: email };
+      const user = await usersCollection.findOne(query);
+      let isAdmin = false;
+      if (user) {
+        isAdmin = user?.role === "admin";
+      }
+      res.send({ isAdmin });
+    });
+
 
 
   } finally {
