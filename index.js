@@ -255,7 +255,7 @@ async function run() {
         return res.send({ message: "you already add this" });
       }
       const result = contactRequestCollection.insertOne(payment);
-      console.log('payment info',payment);
+      // console.log('payment info',payment);
       res.send(result);
     });
 
@@ -434,5 +434,5 @@ app.get("/", (req, res) => {
 });
 
 app.listen(port, () => {
-  console.log(`Example app listening on port ${port}`);
+  // console.log(`Example app listening on port ${port}`);
 });
