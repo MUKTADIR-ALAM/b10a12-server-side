@@ -298,6 +298,13 @@ async function run() {
     });
 
 
+    // get success story 
+    app.get('/getSuccessStory',async(req,res)=>{
+      const result = await successStroyCollection.find().toArray();
+      res.send(result);
+    });
+
+
 
 
 
@@ -336,9 +343,11 @@ async function run() {
         Femalequery
       );
       const permiumBiodataCount = await biodataCollection.countDocuments(premiumQuery);
+      const successMarriedCount = await successStroyCollection.countDocuments();
       const revenue = await contactRequestCollection.countDocuments() * 5; 
+      const totalBiodata = await biodataCollection.countDocuments();
 
-      res.send({ users, maleBiodataCount, femaleBiodataCount,permiumBiodataCount,revenue });
+      res.send({ users, maleBiodataCount, femaleBiodataCount,permiumBiodataCount,revenue,successMarriedCount,totalBiodata });
     });
 
     // get all users
