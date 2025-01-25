@@ -353,6 +353,14 @@ async function run() {
       res.send(user);
     });
 
+    // get those biodata who applied for permium
+    app.get("/get-applied-biodata", verifyToken, async (req, res) => {
+      const query = { status: "pending" };
+      const result = await biodataCollection.find(query).toArray();
+      res.send(result);
+    });
+
+
 
 
   } finally {
