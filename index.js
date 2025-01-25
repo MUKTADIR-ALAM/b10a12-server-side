@@ -30,6 +30,7 @@ async function run() {
     const biodataCollection = database.collection("biodata");
     const favoriteBiodataCollection = database.collection("favorites");
     const contactRequestCollection = database.collection("contactRequest");
+    const successStroyCollection = database.collection("successStroyes");
 
 
 
@@ -266,6 +267,37 @@ async function run() {
       res.send(result);
     });
 
+    // delete contact request
+    app.delete('/delContactRequest/:id',async(req,res)=>{
+      const id = req.params.id;
+      const query = {_id: new ObjectId(id)};
+      const result = await contactRequestCollection.deleteOne(query);
+      res.send(result);
+    });
+
+
+    // get premium biodata
+    app.get('/getPremiumBiodata',async(req,res)=>{
+      const query = {status:'premium'};
+      const result  = await biodataCollection.find(query).toArray();
+      res.send(result);
+    });
+
+    // save success marrige story
+
+    app.post('/successStory',verifyToken,async(req,res)=>{
+      const data = req.body;
+      const email = data.selfEmail;
+      const query = {selfEmail:email};
+      const match = await successStroyCollection.findOne(query);
+      if(match){
+        return res.send({message:'you already add this'});
+      }
+      const result = await successStroyCollection.insertOne(data);
+      res.send(result);
+    });
+
+
 
 
 
@@ -296,14 +328,17 @@ async function run() {
       const users = await usersCollection.estimatedDocumentCount();
       const Malequery = { biodataType: "Male" };
       const Femalequery = { biodataType: "Female" };
+      const premiumQuery = {status:'premium'};
       const maleBiodataCount = await biodataCollection.countDocuments(
         Malequery
       );
       const femaleBiodataCount = await biodataCollection.countDocuments(
         Femalequery
       );
+      const permiumBiodataCount = await biodataCollection.countDocuments(premiumQuery);
+      const revenue = await contactRequestCollection.countDocuments() * 5; 
 
-      res.send({ users, maleBiodataCount, femaleBiodataCount });
+      res.send({ users, maleBiodataCount, femaleBiodataCount,permiumBiodataCount,revenue });
     });
 
     // get all users
