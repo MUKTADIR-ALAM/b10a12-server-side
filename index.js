@@ -361,6 +361,12 @@ async function run() {
     });
 
 
+    // get contact request
+    app.get('/getContactRequestAdmin',async(req,res)=>{
+      const result = await contactRequestCollection.find().toArray();
+      res.send(result);
+    });
+
 
 
   } finally {
