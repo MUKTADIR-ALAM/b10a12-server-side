@@ -1,6 +1,8 @@
 
 # PairUp: A Matrimony platform
 
+![Screenshot 2025-02-05 121744](https://github.com/user-attachments/assets/7c1d7431-69cc-4c64-b910-4841b655bc41)
+
 # About
 Welcome to our Matrimony Platform, a modern and intuitive matchmaking website built with the MERN stack (MongoDB, Express, React, Node.js). This platform connects individuals looking for meaningful relationships through a seamless and secure experience.
 
